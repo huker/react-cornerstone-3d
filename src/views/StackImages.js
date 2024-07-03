@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Dropdown, Space} from 'antd';
+import {Dropdown, Space, Slider} from 'antd';
 import {DownOutlined} from '@ant-design/icons';
 import {Enums, init as csRenderInit, RenderingEngine} from "@cornerstonejs/core";
 import {wadouri} from '@cornerstonejs/dicom-image-loader';
@@ -67,6 +67,8 @@ const menuTools = [
  * demo按照file加载的模式
  */
 function StackImages() {
+
+    let isScrolling = false;
 
     let toolGroup = useRef(null);
 
@@ -147,6 +149,7 @@ function StackImages() {
         if (pointRectShowStateRef.current === 'show') {
             drawRect();
         }
+        isScrolling = false;
     }
 
     const initTools = () => {
@@ -209,6 +212,27 @@ function StackImages() {
         viewport.render();
     }
 
+    const handleScrollToIndex = () => {
+        cornerstoneTools.utilities.scroll(viewport, {
+            delta: 5
+        });
+    }
+
+    const onSliderChange = (value) => {
+        if (!viewport) return;
+        if (isScrolling) return;
+        if (value === currentImageIdIndex) return;
+        isScrolling = true;
+
+        cornerstoneTools.utilities.scroll(viewport, {
+            delta: value - currentImageIdIndex
+        });
+    }
+
+    const getCanvasData = () => {
+        console.log(viewport.canvas.toDataURL('image/jpeg'))
+    }
+
     return (
         <div style={{width: '100%', height: '400px', paddingTop: '20px'}}>
             {/*file upload*/}
@@ -230,10 +254,17 @@ function StackImages() {
                 }} style={{marginRight: '5px'}}>
                     左键: pan
                 </button>
+                <button onClick={() => {
+                    handleToolMenuClick({key: cornerstoneTools.ZoomTool.toolName})
+                }} style={{marginRight: '5px'}}>
+                    左键: zoom
+                </button>
                 <button onClick={toggleShowRect} style={{marginRight: '5px'}}>
                     {pointRectShowState === 'show' ? 'hide point rect' : 'show point rect'}
                 </button>
                 <button onClick={handleReset} style={{marginRight: '5px'}}>reset</button>
+                <button onClick={handleScrollToIndex} style={{marginRight: '5px'}}>scroll to +5</button>
+                <button onClick={getCanvasData} style={{marginRight: '5px'}}>get canvas image data</button>
                 <Dropdown menu={{items: menuTools, onClick: handleToolMenuClick}}>
                     <a onClick={e => e.preventDefault()}>
                         <Space>
@@ -268,6 +299,17 @@ function StackImages() {
                     </div>
                 </div>
             </div>
+
+            <div className={'dicom-viewport-slider'}>
+                {
+                    viewport &&
+                    <Slider min={0}
+                            max={viewport.imageIds.length - 1}
+                            value={currentImageIdIndex}
+                            onChange={onSliderChange}/>
+                }
+            </div>
+
 
         </div>
 

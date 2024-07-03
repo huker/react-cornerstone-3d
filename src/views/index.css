@@ -8,6 +8,12 @@
     font-size: 12px;
 }
 
+.dicom-viewport-slider {
+    width: 40%;
+    margin: 0 auto;
+    background: #cccccc;
+}
+
 .dicom-viewport {
     position: absolute;
     left: 0;
