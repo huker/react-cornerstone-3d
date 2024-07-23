@@ -1,12 +1,12 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Dropdown, Space, Slider} from 'antd';
-import {DownOutlined} from '@ant-design/icons';
+import {Col, Divider, Layout, Row, Slider} from 'antd';
 import {Enums, init as csRenderInit, RenderingEngine} from "@cornerstonejs/core";
 import {wadouri} from '@cornerstonejs/dicom-image-loader';
 import initCornerstoneDICOMImageLoader from '../utils/initCornerstoneDicomImageLoader.js';
 import * as cornerstoneTools from '@cornerstonejs/tools';
 import './index.css';
 
+const {Header, Sider, Content} = Layout;
 const {ViewportType, Events} = Enums;
 
 const renderingEngineId = 'myRenderingEngine';
@@ -54,11 +54,11 @@ const tools = [
 
 const menuTools = [
     {
-        label: 'Length Tool',
+        label: '直线工具',
         key: cornerstoneTools.LengthTool.toolName,
     },
     {
-        label: 'Probe Tool',
+        label: 'CT值工具',
         key: cornerstoneTools.ProbeTool.toolName,
     }
 ];
@@ -234,85 +234,117 @@ function StackImages() {
     }
 
     return (
-        <div style={{width: '100%', height: '400px', paddingTop: '20px'}}>
-            {/*file upload*/}
-            <input
-                type="file"
-                multiple
-                webkitdirectory="true"
-                onChange={onFileChange}
-            />
-            {/*tools*/}
-            <div style={{margin: '20px 0', fontSize: '14px'}}>
-                <button onClick={() => {
-                    handleToolMenuClick({key: cornerstoneTools.WindowLevelTool.toolName})
-                }} style={{marginRight: '5px'}}>
-                    左键: windowLevel
-                </button>
-                <button onClick={() => {
-                    handleToolMenuClick({key: cornerstoneTools.PanTool.toolName})
-                }} style={{marginRight: '5px'}}>
-                    左键: pan
-                </button>
-                <button onClick={() => {
-                    handleToolMenuClick({key: cornerstoneTools.ZoomTool.toolName})
-                }} style={{marginRight: '5px'}}>
-                    左键: zoom
-                </button>
-                <button onClick={toggleShowRect} style={{marginRight: '5px'}}>
-                    {pointRectShowState === 'show' ? 'hide point rect' : 'show point rect'}
-                </button>
-                <button onClick={handleReset} style={{marginRight: '5px'}}>reset</button>
-                <button onClick={handleScrollToIndex} style={{marginRight: '5px'}}>scroll to +5</button>
-                <button onClick={getCanvasData} style={{marginRight: '5px'}}>get canvas image data</button>
-                <Dropdown menu={{items: menuTools, onClick: handleToolMenuClick}}>
-                    <a onClick={e => e.preventDefault()}>
-                        <Space>
-                            选择左键测量工具
-                            <DownOutlined/>
-                        </Space>
-                    </a>
-                </Dropdown>
-            </div>
-            {/*viewport*/}
-            <div className={'dicom-viewport-wrapper'}>
-                <div className={'dicom-viewport'} id="content" style={{width: '100%', height: '100%'}}
-                     onContextMenu={event => {
-                         event.preventDefault();
-                     }}
-                     onMouseDown={(event) => {
-                         event.preventDefault();
-                     }}
-                />
-                <div>
-                    {
-                        dicomBasicInfo &&
-                        <div className={'dicom-viewport-overlay-left-top'}>
-                            <p>Patient Name:{dicomBasicInfo.patientName}</p>
-                            <p>Patient ID:{dicomBasicInfo.patientID}</p>
-                            <p>Patient Sex:{dicomBasicInfo.patientSex}</p>
-                            <p>Patient Age:{dicomBasicInfo.patientAge}</p>
-                        </div>
-                    }
-                    <div className={'dicom-viewport-overlay-right-bottom'}>
-                        {currentImageIdIndex + 1 || 1} / {viewport && viewport.imageIds.length || 1}
-                    </div>
+        <Layout className="dicom-main-layout">
+            <Sider width="25%" theme="light" className="dicom-main-sider">
+                {/* dicom文件加载 */}
+                <Row>
+                    <Col span={12}>选择一个dicom文件夹:</Col>
+                    <Col span={12}>
+                        <input
+                            type="file"
+                            multiple
+                            webkitdirectory="true"
+                            onChange={onFileChange}
+                        /></Col>
+                </Row>
+                <Divider/>
+                {/* 工具 */}
+                <div style={{padding: '0 20px'}}>
+                    <Row style={{marginTop: '20px'}}>
+                        <Col>鼠标左键：</Col>
+                    </Row>
+                    <Row style={{marginTop: '5px'}}>
+                        <Col>
+                            <button onClick={() => {
+                                handleToolMenuClick({key: cornerstoneTools.WindowLevelTool.toolName})
+                            }} style={{marginRight: '5px'}}>
+                                windowLevel
+                            </button>
+                        </Col>
+                        <Col>
+                            <button onClick={() => {
+                                handleToolMenuClick({key: cornerstoneTools.PanTool.toolName})
+                            }} style={{marginRight: '5px'}}>
+                                pan
+                            </button>
+                        </Col>
+                        <Col>
+                            <button onClick={() => {
+                                handleToolMenuClick({key: cornerstoneTools.ZoomTool.toolName})
+                            }} style={{marginRight: '5px'}}>
+                                zoom
+                            </button>
+                        </Col>
+                    </Row>
+                    <Row style={{marginTop: '20px'}}>
+                        <Col>测量、绘制：</Col>
+                    </Row>
+                    <Row style={{marginTop: '5px'}}>
+                        {
+                            menuTools && menuTools.map((item) => {
+                                return <button onClick={() => {
+                                    handleToolMenuClick(item)
+                                }} style={{marginRight: '5px'}}>
+                                    {item.label}
+                                </button>
+                            })
+                        }
+                        <button onClick={toggleShowRect} style={{marginRight: '5px'}}>
+                            {pointRectShowState === 'show' ? '隐藏手动绘制' : '显示手动绘制'}
+                        </button>
+                    </Row>
+                    <Row style={{marginTop: '20px'}}>
+                        <Col>其他操作：</Col>
+                    </Row>
+                    <Row style={{marginTop: '5px'}}>
+                        <button onClick={handleReset} style={{marginRight: '5px'}}>重置viewport</button>
+                        <button onClick={handleScrollToIndex} style={{marginRight: '5px'}}>scroll to +5</button>
+                        <button onClick={getCanvasData} style={{marginRight: '5px'}}>获取画布数据</button>
+                    </Row>
                 </div>
-            </div>
+            </Sider>
 
-            <div className={'dicom-viewport-slider'}>
-                {
-                    viewport &&
-                    <Slider min={0}
-                            max={viewport.imageIds.length - 1}
-                            value={currentImageIdIndex}
-                            onChange={onSliderChange}/>
-                }
-            </div>
-
-
-        </div>
-
+            <Layout>
+                <Header className="dicom-main-header">
+                    react+cornerstone3d示例
+                </Header>
+                <Content className="dicom-main-content">
+                    <div className={'dicom-viewport-wrapper'}>
+                        <div className={'dicom-viewport'} id="content" style={{width: '100%', height: '100%'}}
+                             onContextMenu={event => {
+                                 event.preventDefault();
+                             }}
+                             onMouseDown={(event) => {
+                                 event.preventDefault();
+                             }}
+                        />
+                        <div>
+                            {
+                                dicomBasicInfo &&
+                                <div className={'dicom-viewport-overlay-left-top'}>
+                                    <p>Patient Name:{dicomBasicInfo.patientName}</p>
+                                    <p>Patient ID:{dicomBasicInfo.patientID}</p>
+                                    <p>Patient Sex:{dicomBasicInfo.patientSex}</p>
+                                    <p>Patient Age:{dicomBasicInfo.patientAge}</p>
+                                </div>
+                            }
+                            <div className={'dicom-viewport-overlay-right-bottom'}>
+                                {currentImageIdIndex + 1 || 1} / {viewport && viewport.imageIds.length || 1}
+                            </div>
+                        </div>
+                    </div>
+                    <div className={'dicom-viewport-slider'}>
+                        {
+                            viewport &&
+                            <Slider min={0}
+                                    max={viewport.imageIds.length - 1}
+                                    value={currentImageIdIndex}
+                                    onChange={onSliderChange}/>
+                        }
+                    </div>
+                </Content>
+            </Layout>
+        </Layout>
     );
 }
 

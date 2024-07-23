@@ -5,7 +5,8 @@ This project was create with Create React App
 `npm start`
 
 render
-- loader加载file文件，渲染序列
+- [StackImages.js](src%2Fviews%2FStackImages.js) loader加载file文件，渲染序列
+- [StackImages-wado.js](src%2Fviews%2FStackImages-wado.js) wadouri load images
 
 viewport
 - 调窗

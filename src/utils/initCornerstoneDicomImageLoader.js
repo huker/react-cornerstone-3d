@@ -19,6 +19,7 @@ export default function initCornerstoneDICOMImageLoader() {
             convertFloatPixelDataToInt: false,
             use16BitDataType: preferSizeOverAccuracy || useNorm16Texture,
         },
+        // 走wado uri时打开这儿
         // beforeSend: (xhr) => {
         //     xhr.setRequestHeader('Authorization', `bearer ${token}`);
         // }
