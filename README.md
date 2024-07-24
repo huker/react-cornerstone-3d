@@ -9,10 +9,11 @@ render
 - [StackImages-wado.js](src%2Fviews%2FStackImages-wado.js) wadouri load images
 
 viewport
-- 调窗
-- 缩放(右键)
+- 调窗(默认左键)
+- 缩放(默认右键)
 - 移动
 - 重置
+- 窗口变化resize
 
 基础信息
 - dicom信息

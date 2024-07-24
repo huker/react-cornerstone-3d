@@ -1,10 +1,12 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Col, Divider, Layout, Row, Slider} from 'antd';
+import lodash from "lodash";
+import {Col, Divider, Dropdown, Layout, Row, Slider} from 'antd';
 import {Enums, init as csRenderInit, RenderingEngine} from "@cornerstonejs/core";
 import {wadouri} from '@cornerstonejs/dicom-image-loader';
 import initCornerstoneDICOMImageLoader from '../utils/initCornerstoneDicomImageLoader.js';
 import * as cornerstoneTools from '@cornerstonejs/tools';
 import './index.css';
+import {menuTools, tools, wwwcOptions} from "../utils/constants";
 
 const {Header, Sider, Content} = Layout;
 const {ViewportType, Events} = Enums;
@@ -20,58 +22,13 @@ const upper = windowCenter + windowWidth / 2.0;
 
 const ctVoiRange = {lower, upper};
 
-const tools = [
-    {
-        tool: cornerstoneTools.WindowLevelTool,
-        name: cornerstoneTools.WindowLevelTool.toolName,
-        mouse: cornerstoneTools.Enums.MouseBindings.Primary
-    },
-    {
-        tool: cornerstoneTools.PanTool,
-        name: cornerstoneTools.PanTool.toolName,
-        mouse: cornerstoneTools.Enums.MouseBindings.Primary
-    },
-    {
-        tool: cornerstoneTools.ZoomTool,
-        name: cornerstoneTools.ZoomTool.toolName,
-        mouse: cornerstoneTools.Enums.MouseBindings.Secondary
-    },
-    {
-        tool: cornerstoneTools.StackScrollMouseWheelTool,
-        name: cornerstoneTools.StackScrollMouseWheelTool.toolName
-    },
-    {
-        tool: cornerstoneTools.LengthTool,
-        name: cornerstoneTools.LengthTool.toolName,
-        mouse: cornerstoneTools.Enums.MouseBindings.Primary
-    },
-    {
-        tool: cornerstoneTools.ProbeTool,
-        name: cornerstoneTools.ProbeTool.toolName,
-        mouse: cornerstoneTools.Enums.MouseBindings.Primary
-    }
-];
-
-const menuTools = [
-    {
-        label: '直线工具',
-        key: cornerstoneTools.LengthTool.toolName,
-    },
-    {
-        label: 'CT值工具',
-        key: cornerstoneTools.ProbeTool.toolName,
-    }
-];
-
 /**
  * demo按照file加载的模式
  */
 function StackImages() {
 
     let isScrolling = false;
-
     let toolGroup = useRef(null);
-
     let pointRectShowStateRef = useRef('hidden');
 
     let [viewport, setViewport] = useState(null);
@@ -141,7 +98,18 @@ function StackImages() {
         const patientSex = image.data.string('x00100040') || 'N/A';
         setDicomBasicInfo({patientName, patientID, patientAge, patientSex});
         // add event listener
+        addListener();
+    }
+
+    // 各个监听
+    const addListener = () => {
         viewport.element.addEventListener(Events.IMAGE_RENDERED, onImageRender);
+        window.addEventListener('resize', onWindowResize)
+    }
+
+    const onWindowResize = () => {
+        viewport.resize();
+        viewport.render();
     }
 
     const onImageRender = () => {
@@ -195,6 +163,7 @@ function StackImages() {
         }
     }
 
+    // 手动绘制图形
     const drawRect = () => {
         if (!viewport) return;
         const context = viewport.canvas.getContext('2d');
@@ -206,15 +175,16 @@ function StackImages() {
         context.fillText('病灶信息', 75, 75)
     }
 
+    // 重置Viewport
     const handleReset = () => {
         viewport.setProperties({voiRange: ctVoiRange});
         viewport.resetCamera();
         viewport.render();
     }
 
-    const handleScrollToIndex = () => {
+    const handleScrollToIndex = (delta) => {
         cornerstoneTools.utilities.scroll(viewport, {
-            delta: 5
+            delta
         });
     }
 
@@ -230,7 +200,25 @@ function StackImages() {
     }
 
     const getCanvasData = () => {
-        console.log(viewport.canvas.toDataURL('image/jpeg'))
+        const base64Data = viewport.canvas.toDataURL('image/jpeg');
+        console.log('base64Data', base64Data)
+    }
+
+    const handleWwwcSelect = (v) => {
+        const item = lodash.find(wwwcOptions, {key: v.key});
+        if (item) {
+            const ww = item.value[0];
+            const wc = item.value[1];
+            const lower = wc - ww / 2.0;
+            const upper = wc + ww / 2.0;
+            viewport.setProperties({
+                voiRange: {
+                    lower,
+                    upper
+                }
+            });
+            viewport.render();
+        }
     }
 
     return (
@@ -276,13 +264,25 @@ function StackImages() {
                             </button>
                         </Col>
                     </Row>
+
+                    <Row style={{marginTop: '20px'}}>
+                        <Col>viewport：</Col>
+                    </Row>
+                    <Row style={{marginTop: '5px'}}>
+                        <Dropdown menu={{items: wwwcOptions, onClick: handleWwwcSelect}} placement="bottomRight" arrow>
+                            <button style={{marginRight: '5px'}}>设置窗值</button>
+                        </Dropdown>
+                        {/*<button onClick={handleReset} style={{marginRight: '5px'}}>设置窗值</button>*/}
+                        <button onClick={handleReset} style={{marginRight: '5px'}}>重置viewport</button>
+                    </Row>
+
                     <Row style={{marginTop: '20px'}}>
                         <Col>测量、绘制：</Col>
                     </Row>
                     <Row style={{marginTop: '5px'}}>
                         {
                             menuTools && menuTools.map((item) => {
-                                return <button onClick={() => {
+                                return <button key={item.key + '-tool'} onClick={() => {
                                     handleToolMenuClick(item)
                                 }} style={{marginRight: '5px'}}>
                                     {item.label}
@@ -297,8 +297,8 @@ function StackImages() {
                         <Col>其他操作：</Col>
                     </Row>
                     <Row style={{marginTop: '5px'}}>
-                        <button onClick={handleReset} style={{marginRight: '5px'}}>重置viewport</button>
-                        <button onClick={handleScrollToIndex} style={{marginRight: '5px'}}>scroll to +5</button>
+                        <button onClick={() => handleScrollToIndex(-1)} style={{marginRight: '5px'}}>上一张</button>
+                        <button onClick={() => handleScrollToIndex(1)} style={{marginRight: '5px'}}>下一张</button>
                         <button onClick={getCanvasData} style={{marginRight: '5px'}}>获取画布数据</button>
                     </Row>
                 </div>
@@ -344,6 +344,7 @@ function StackImages() {
                     </div>
                 </Content>
             </Layout>
+
         </Layout>
     );
 }
