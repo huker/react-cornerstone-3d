@@ -59,10 +59,32 @@ const wwwcOptions = [
         value: [1500, 300],
         label: '骨 1500/300',
     }
-]
+];
+
+const flipOptions = [
+    {
+        key: 'horizontal',
+        label: '水平翻转',
+    },
+    {
+        key: 'vertical',
+        label: '垂直翻转',
+    }
+];
+
+const colorMapOptions = [
+    {key: 'jet', label: 'Jet'},
+    {key: 'hsv', label: 'HSV'},
+    {key: 'cool', label: 'Cool'},
+    {key: 'coolwarm', label: 'CoolWarm'},
+    {key: 'hotIron', label: 'Hot Iron'},
+    {key: 'pet', label: 'PET'}
+];
 
 export {
     tools,
     menuTools,
-    wwwcOptions
+    wwwcOptions,
+    flipOptions,
+    colorMapOptions
 }

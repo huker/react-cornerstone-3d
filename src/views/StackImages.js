@@ -1,12 +1,12 @@
 import React, {useEffect, useRef, useState} from "react";
-import lodash from "lodash";
-import {Col, Divider, Dropdown, Layout, Row, Slider} from 'antd';
+import {Col, Divider, Layout, Row, Slider} from 'antd';
 import {Enums, init as csRenderInit, RenderingEngine} from "@cornerstonejs/core";
 import {wadouri} from '@cornerstonejs/dicom-image-loader';
 import initCornerstoneDICOMImageLoader from '../utils/initCornerstoneDicomImageLoader.js';
 import * as cornerstoneTools from '@cornerstonejs/tools';
 import './index.css';
-import {menuTools, tools, wwwcOptions} from "../utils/constants";
+import {menuTools, tools} from "../utils/constants";
+import ViewportTools from "../components/ViewportTools";
 
 const {Header, Sider, Content} = Layout;
 const {ViewportType, Events} = Enums;
@@ -175,13 +175,6 @@ function StackImages() {
         context.fillText('病灶信息', 75, 75)
     }
 
-    // 重置Viewport
-    const handleReset = () => {
-        viewport.setProperties({voiRange: ctVoiRange});
-        viewport.resetCamera();
-        viewport.render();
-    }
-
     const handleScrollToIndex = (delta) => {
         cornerstoneTools.utilities.scroll(viewport, {
             delta
@@ -202,23 +195,6 @@ function StackImages() {
     const getCanvasData = () => {
         const base64Data = viewport.canvas.toDataURL('image/jpeg');
         console.log('base64Data', base64Data)
-    }
-
-    const handleWwwcSelect = (v) => {
-        const item = lodash.find(wwwcOptions, {key: v.key});
-        if (item) {
-            const ww = item.value[0];
-            const wc = item.value[1];
-            const lower = wc - ww / 2.0;
-            const upper = wc + ww / 2.0;
-            viewport.setProperties({
-                voiRange: {
-                    lower,
-                    upper
-                }
-            });
-            viewport.render();
-        }
     }
 
     return (
@@ -269,11 +245,7 @@ function StackImages() {
                         <Col>viewport：</Col>
                     </Row>
                     <Row style={{marginTop: '5px'}}>
-                        <Dropdown menu={{items: wwwcOptions, onClick: handleWwwcSelect}} placement="bottomRight" arrow>
-                            <button style={{marginRight: '5px'}}>设置窗值</button>
-                        </Dropdown>
-                        {/*<button onClick={handleReset} style={{marginRight: '5px'}}>设置窗值</button>*/}
-                        <button onClick={handleReset} style={{marginRight: '5px'}}>重置viewport</button>
+                        <ViewportTools viewport={viewport}/>
                     </Row>
 
                     <Row style={{marginTop: '20px'}}>
