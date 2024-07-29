@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Col, Divider, Layout, Row, Slider} from 'antd';
+import {Col, Divider, Layout, Row, Slider, Tooltip} from 'antd';
 import {Enums, init as csRenderInit, RenderingEngine} from "@cornerstonejs/core";
 import {wadouri} from '@cornerstonejs/dicom-image-loader';
 import initCornerstoneDICOMImageLoader from '../utils/initCornerstoneDicomImageLoader.js';
@@ -7,6 +7,7 @@ import * as cornerstoneTools from '@cornerstonejs/tools';
 import './index.css';
 import {menuTools, tools} from "../utils/constants";
 import ViewportTools from "../components/ViewportTools";
+import CustomCanvasImageTool from "../components/CustomCanvasImageTool";
 
 const {Header, Sider, Content} = Layout;
 const {ViewportType, Events} = Enums;
@@ -29,6 +30,7 @@ function StackImages() {
 
     let isScrolling = false;
     let toolGroup = useRef(null);
+    let stackImageIds = useRef(null);
     let pointRectShowStateRef = useRef('hidden');
 
     let [viewport, setViewport] = useState(null);
@@ -82,6 +84,7 @@ function StackImages() {
         for (let i = 0; i < files.length; i++) {
             imageIds[i] = wadouri.fileManager.add(files[i]);
         }
+        stackImageIds.value = imageIds;
         loadImageStack(imageIds);
     }
 
@@ -261,9 +264,11 @@ function StackImages() {
                                 </button>
                             })
                         }
-                        <button onClick={toggleShowRect} style={{marginRight: '5px'}}>
-                            {pointRectShowState === 'show' ? '隐藏手动绘制' : '显示手动绘制'}
-                        </button>
+                        <Tooltip title="比如一些手动绘制的病灶区域和信息">
+                            <button onClick={toggleShowRect} style={{marginRight: '5px'}}>
+                                {pointRectShowState === 'show' ? '隐藏手动绘制' : '显示手动绘制'}
+                            </button>
+                        </Tooltip>
                     </Row>
                     <Row style={{marginTop: '20px'}}>
                         <Col>其他操作：</Col>
@@ -271,7 +276,10 @@ function StackImages() {
                     <Row style={{marginTop: '5px'}}>
                         <button onClick={() => handleScrollToIndex(-1)} style={{marginRight: '5px'}}>上一张</button>
                         <button onClick={() => handleScrollToIndex(1)} style={{marginRight: '5px'}}>下一张</button>
-                        <button onClick={getCanvasData} style={{marginRight: '5px'}}>获取画布数据</button>
+                        <Tooltip title="控制台打印当前画布的图像数据">
+                            <button onClick={getCanvasData} style={{marginRight: '5px'}}>当前画布数据</button>
+                        </Tooltip>
+                        <CustomCanvasImageTool stackImageIds={stackImageIds}/>
                     </Row>
                 </div>
             </Sider>
